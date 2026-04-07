@@ -1,0 +1,166 @@
+[
+  {
+    "id": "seed_01_grounded_inject",
+    "input": {
+      "query": "How do I reset my membership password?",
+      "llm_answer": "Go to the member portal and click Forgot Password. You will receive an email.",
+      "grounding": {"is_grounded": true, "kb_grounded": true},
+      "is_chitchat": false,
+      "candidate_links": [
+        {"label": "Member Portal", "url": "https://example.com/members", "keywords": ["membership", "password", "login"], "description": "Member account management"},
+        {"label": "Listings Help", "url": "https://example.com/listings", "keywords": ["listing", "property"], "description": "Listings help"}
+      ]
+    },
+    "expected": {"status": "injected", "matched_label": "Member Portal"}
+  },
+  {
+    "id": "seed_02_grounded_already_present",
+    "input": {
+      "query": "Where can I find the member portal?",
+      "llm_answer": "You can find it at [Member Portal](https://example.com/members).",
+      "grounding": {"is_grounded": true, "kb_grounded": true},
+      "is_chitchat": false,
+      "candidate_links": [
+        {"label": "Member Portal", "url": "https://example.com/members", "keywords": ["membership", "portal"], "description": "Member account management"}
+      ]
+    },
+    "expected": {"status": "already_present", "matched_label": "Member Portal"}
+  },
+  {
+    "id": "seed_03_chitchat_skip",
+    "input": {
+      "query": "hello, how are you?",
+      "llm_answer": "Hi! I'm doing well, thanks for asking. How can I help you today?",
+      "grounding": {"is_grounded": true, "kb_grounded": false},
+      "is_chitchat": true,
+      "candidate_links": [
+        {"label": "Member Portal", "url": "https://example.com/members", "keywords": ["membership", "portal"], "description": "Member account management"}
+      ]
+    },
+    "expected": {"status": "skipped_chitchat", "matched_label": null}
+  },
+  {
+    "id": "seed_04_ungrounded_skip",
+    "input": {
+      "query": "What's the weather in Tokyo?",
+      "llm_answer": "I haven't been trained on that one yet.",
+      "grounding": {"is_grounded": false, "kb_grounded": false},
+      "is_chitchat": false,
+      "candidate_links": [
+        {"label": "Member Portal", "url": "https://example.com/members", "keywords": ["membership"], "description": "Member portal"}
+      ]
+    },
+    "expected": {"status": "skipped_ungrounded", "matched_label": null}
+  },
+  {
+    "id": "seed_05_no_match",
+    "input": {
+      "query": "What time does the pool open?",
+      "llm_answer": "The pool opens at 7am every day.",
+      "grounding": {"is_grounded": true, "kb_grounded": true},
+      "is_chitchat": false,
+      "candidate_links": [
+        {"label": "Member Portal", "url": "https://example.com/members", "keywords": ["membership", "portal"], "description": "Member account management"}
+      ]
+    },
+    "expected": {"status": "skipped_no_match", "matched_label": null}
+  },
+  {
+    "id": "edge_06_empty_candidate_links",
+    "description": "Empty candidate list must return skipped_no_match without calling the embedding API.",
+    "input": {
+      "query": "How do I cancel my subscription?",
+      "llm_answer": "You can cancel your subscription from the account settings page.",
+      "grounding": {"is_grounded": true, "kb_grounded": true},
+      "is_chitchat": false,
+      "candidate_links": []
+    },
+    "expected": {"status": "skipped_no_match", "matched_label": null}
+  },
+  {
+    "id": "edge_07_chitchat_overrides_grounded",
+    "description": "is_chitchat=true must win even when kb_grounded=true. R1 has priority over R4.",
+    "input": {
+      "query": "What's up?",
+      "llm_answer": "Not much! How can I help?",
+      "grounding": {"is_grounded": true, "kb_grounded": true},
+      "is_chitchat": true,
+      "candidate_links": [
+        {"label": "Member Portal", "url": "https://example.com/members", "keywords": ["membership", "account"], "description": "Member account management"}
+      ]
+    },
+    "expected": {"status": "skipped_chitchat", "matched_label": null}
+  },
+  {
+    "id": "edge_08_ambiguous_keyword_semantic_disambiguates",
+    "description": "The word 'account' matches both candidates lexically. Semantics should pick the billing one because the query is about invoices.",
+    "input": {
+      "query": "I need help with my invoice and billing account.",
+      "llm_answer": "You can view and download invoices from the billing section of your account.",
+      "grounding": {"is_grounded": true, "kb_grounded": true},
+      "is_chitchat": false,
+      "candidate_links": [
+        {"label": "Member Portal", "url": "https://example.com/members", "keywords": ["account", "login", "membership"], "description": "Manage your member account and profile settings."},
+        {"label": "Billing Help", "url": "https://example.com/billing", "keywords": ["account", "invoice", "billing", "payment"], "description": "View invoices, update payment methods and manage billing."}
+      ]
+    },
+    "expected": {"status": "injected", "matched_label": "Billing Help"}
+  },
+  {
+    "id": "edge_09_url_plain_text_already_present",
+    "description": "URL appears as plain text (not markdown) in the answer — must still be detected as already_present.",
+    "input": {
+      "query": "Where do I manage my listings?",
+      "llm_answer": "You can manage your listings at https://example.com/listings directly.",
+      "grounding": {"is_grounded": true, "kb_grounded": true},
+      "is_chitchat": false,
+      "candidate_links": [
+        {"label": "Listings Help", "url": "https://example.com/listings", "keywords": ["listing", "property", "manage"], "description": "Help center for property listings."}
+      ]
+    },
+    "expected": {"status": "already_present", "matched_label": "Listings Help"}
+  },
+  {
+    "id": "edge_10_two_close_scores_deterministic",
+    "description": "Two candidates with very similar keywords — the one with more keyword overlap wins deterministically in keyword mode.",
+    "input": {
+      "query": "How do I create a new property listing?",
+      "llm_answer": "Click on the 'New Listing' button in your dashboard and fill in the property details.",
+      "grounding": {"is_grounded": true, "kb_grounded": true},
+      "is_chitchat": false,
+      "candidate_links": [
+        {"label": "Listings Help", "url": "https://example.com/listings", "keywords": ["listing", "create listing", "property", "new listing"], "description": "Help center for creating and managing property listings."},
+        {"label": "Dashboard Guide", "url": "https://example.com/dashboard", "keywords": ["dashboard", "listing", "property"], "description": "Overview of your member dashboard and tools."}
+      ]
+    },
+    "expected": {"status": "injected", "matched_label": "Listings Help"}
+  },
+  {
+    "id": "edge_11_grounded_false_ignores_candidates",
+    "description": "is_grounded=false AND kb_grounded=false — R2 fires even with relevant candidates present.",
+    "input": {
+      "query": "How do I reset my password?",
+      "llm_answer": "I don't have information about that in my knowledge base.",
+      "grounding": {"is_grounded": false, "kb_grounded": false},
+      "is_chitchat": false,
+      "candidate_links": [
+        {"label": "Member Portal", "url": "https://example.com/members", "keywords": ["password", "reset", "login"], "description": "Reset your password and manage your account."}
+      ]
+    },
+    "expected": {"status": "skipped_ungrounded", "matched_label": null}
+  },
+  {
+    "id": "edge_12_no_duplicate_injection",
+    "description": "Citation must appear exactly once. If the URL is already in the answer, do not append again.",
+    "input": {
+      "query": "How do I view my billing history?",
+      "llm_answer": "Your billing history is available at [Billing Help](https://example.com/billing). Visit it anytime.",
+      "grounding": {"is_grounded": true, "kb_grounded": true},
+      "is_chitchat": false,
+      "candidate_links": [
+        {"label": "Billing Help", "url": "https://example.com/billing", "keywords": ["billing", "invoice", "history", "payment"], "description": "View and download your billing history and invoices."}
+      ]
+    },
+    "expected": {"status": "already_present", "matched_label": "Billing Help"}
+  }
+]
