@@ -197,7 +197,7 @@ Results: 12/12 passed — accuracy: 100.0%
 
 ## Video walkthrough
 
-[Link to video — to be added after recording]
+https://drive.google.com/file/d/1iZiwLeFmULCNx-oCAbPaMKS3MkpsyD7j/view?usp=sharing
 
 ---
 
