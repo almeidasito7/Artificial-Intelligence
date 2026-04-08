@@ -1,0 +1,33 @@
+# Docker Compose template for the LLM Engineer Assessment
+# Modify as needed for your solution architecture.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data:ro
+    environment:
+      # Add your LLM API key here (or use .env file)
+      # OPENAI_API_KEY: ${OPENAI_API_KEY}
+      # ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      DATABASE_PATH: /app/data/staffing.db
+      PERMISSIONS_PATH: /app/data/user_permissions.json
+      DOCUMENTS_PATH: /app/data/documents
+    # Uncomment if you need a vector database service:
+    # depends_on:
+    #   - vectordb
+
+  # Uncomment and configure if using a vector database service:
+  # vectordb:
+  #   image: chromadb/chroma:latest
+  #   ports:
+  #     - "8001:8000"
+  #   volumes:
+  #     - chroma_data:/chroma/chroma
+
+# volumes:
+#   chroma_data:
